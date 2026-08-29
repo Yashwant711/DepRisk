@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import tree_sitter_javascript as ts_js
 import tree_sitter_python as ts_py
-import tree_sitter_rust as ts_rust
 import tree_sitter_typescript as ts_ts
 from tree_sitter import Language, Node, Parser, Query
 
@@ -73,38 +72,6 @@ JS_CALL_QUERY = """
   ]) @call_expr
 """
 
-# Rust Queries
-RUST_IMPORT_QUERY = """
-(use_declaration
-  argument: [
-    (scoped_identifier
-      path: (identifier) @import_pkg)
-    (use_as_clause
-      path: (identifier) @import_pkg
-      alias: (identifier) @import_alias)
-    (use_list
-      (scoped_identifier
-        path: (identifier) @import_pkg))
-  ])
-
-(extern_crate_declaration
-  name: (identifier) @import_pkg)
-"""
-
-RUST_CALL_QUERY = """
-(call_expression
-  function: [
-    (identifier) @func_ident
-    (field_expression
-      value: (identifier) @obj_ident
-      field: (field_identifier) @field_ident)
-    (scoped_identifier
-      path: (identifier) @scope_path
-      name: (identifier) @scope_name)
-  ]) @call_expr
-"""
-
-
 # ----------------------------------------------------------------------
 # Universal AST Extractor
 # ----------------------------------------------------------------------
@@ -116,7 +83,6 @@ class UniversalASTExtractor:
         ".jsx": "javascript",
         ".ts": "typescript",
         ".tsx": "typescript",
-        ".rs": "rust",
     }
 
     IGNORE_DIRS = {
@@ -141,7 +107,6 @@ class UniversalASTExtractor:
             "python": (ts_py.language(), PY_IMPORT_QUERY, PY_CALL_QUERY),
             "javascript": (ts_js.language(), JS_IMPORT_QUERY, JS_CALL_QUERY),
             "typescript": (ts_ts.language_typescript(), JS_IMPORT_QUERY, JS_CALL_QUERY),
-            "rust": (ts_rust.language(), RUST_IMPORT_QUERY, RUST_CALL_QUERY),
         }
 
         self.queries: Dict[str, Tuple[Query, Query]] = {}
@@ -152,8 +117,8 @@ class UniversalASTExtractor:
             self._languages[lang_name] = lang
             self._parsers[lang_name] = parser
             self.queries[lang_name] = (
-                lang.query(imp_q_str),
-                lang.query(call_q_str),
+                Query(lang, imp_q_str),
+                Query(lang, call_q_str),
             )
 
     def extract_usages(self, project_dir: Path, target_pkg: str) -> List[CallSite]:
@@ -161,7 +126,6 @@ class UniversalASTExtractor:
         project_dir = project_dir.resolve()
         results: List[CallSite] = []
 
-        # Standardize target names across ecosystems (e.g. rust-crypto vs rust_crypto)
         normalized_target = target_pkg.replace("-", "_").lower()
 
         for file_path in self._walk_files(project_dir):
@@ -253,18 +217,6 @@ class UniversalASTExtractor:
                         parent = parent.parent
                     if parent:
                         imported.update(self._extract_js_imported_names(parent))
-
-        elif lang_key == "rust":
-            for node, _ in captures:
-                text = node.text.decode("utf-8", errors="ignore")
-                if text == target_pkg or text.replace("-", "_") == normalized_target:
-                    parent = node.parent
-                    if parent and parent.type == "use_as_clause":
-                        alias_node = parent.child_by_field_name("alias")
-                        if alias_node:
-                            imported.add(alias_node.text.decode("utf-8", errors="ignore"))
-                    else:
-                        imported.add(text)
 
         return imported
 

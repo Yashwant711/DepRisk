@@ -27,7 +27,6 @@ console = Console()
 ECOSYSTEM_BADGES = {
     "node": "[bold black on #5FA04E] Node/npm [/bold black on #5FA04E]",
     "python": "[bold white on #3776AB] Python/PyPI [/bold white on #3776AB]",
-    "rust": "[bold white on #DEA584] Rust/Cargo [/bold white on #DEA584]",
 }
 
 RISK_STYLES = {
