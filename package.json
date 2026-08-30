@@ -1,0 +1,37 @@
+{
+  "name": "deprisk",
+  "version": "0.1.0",
+  "description": "Repository-aware dependency compatibility analysis for Node.js and Python.",
+  "type": "module",
+  "bin": {
+    "deprisk": "dist/cli/index.js"
+  },
+  "main": "dist/core/model.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@iarna/toml": "^2.2.5",
+    "commander": "^15.0.0",
+    "err": "^2.1.13",
+    "express": "^5.2.1",
+    "fast-glob": "^3.3.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "semver": "^7.8.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/semver": "^7.8.0",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}

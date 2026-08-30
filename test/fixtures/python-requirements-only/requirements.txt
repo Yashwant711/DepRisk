@@ -1,0 +1,5 @@
+# core deps
+django==4.2.1
+celery[redis]>=5.3,<6
+python-dotenv
+-e git+https://example.com/pkg.git#egg=pkg
